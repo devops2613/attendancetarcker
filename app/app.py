@@ -1,14 +1,15 @@
-from sqlalchemy import text  # Add this import at the top of your file
+from flask import Flask, jsonify
+from sqlalchemy import text
+from . import db  # ✅ Correct relative import
 
-@app.route('/health')
+from flask import Blueprint
+
+app_routes = Blueprint('app_routes', __name__)
+
+@app_routes.route('/health')
 def health_check():
     try:
-        # Simple database check
         db.session.execute(text('SELECT 1'))
         return 'OK', 200
     except Exception as e:
-        return str(e), 500check
-        db.engine.execute('SELECT 1')
-        return 'OK', 200
-    except Exception as e:
-        return str(e), 500
+        return jsonify({'error': str(e)}), 500
