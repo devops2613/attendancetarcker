@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        git 'Default' // Make sure Git is configured under Manage Jenkins > Global Tool Configuration
-    }
-
     stages {
 
         stage('Clone Repo') {
@@ -34,14 +30,26 @@ pipeline {
                 script {
                     bat '''
                         echo Waiting for app to start...
+                        setlocal enabledelayedexpansion
+                        set "counter=0"
 
-                        for /L %%i in (1,1,30) do (
-                            curl -sf http://localhost:5000/health && exit /b 0
-                            timeout /T 2 >nul
+                        :loop
+                        set /a counter+=1
+                        echo Attempt !counter!...                        
+
+                        curl -sf http://localhost:5000/health >nul 2>&1
+                        if !errorlevel! EQU 0 (
+                            echo App is up!
+                            exit /b 0
                         )
 
-                        echo Application did not respond in time.
-                        exit /b 1
+                        if !counter! GEQ 30 (
+                            echo Application did not respond in time.
+                            exit /b 1
+                        )
+
+                        timeout /T 2 >nul
+                        goto loop
                     '''
                 }
             }
@@ -49,7 +57,11 @@ pipeline {
 
         stage('Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: '1234', usernameVariable: 'msdevops2613@gmail.com', passwordVariable: 'Msdevops@2613')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: '1234', // Must match Jenkins credential ID
+                    usernameVariable: 'DOCKER_USERNAME',
+                    passwordVariable: 'DOCKER_PASSWORD'
+                )]) {
                     script {
                         bat '''
                             echo Logging in to DockerHub...
