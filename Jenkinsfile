@@ -5,7 +5,7 @@ pipeline {
 
         stage('Clone Repo') {
             steps {
-                git branch: 'main', url: 'https://github.com/Bhagyavan8050/AttendanceTracker.git'
+                git branch: 'main', url: 'https://github.com/devops2613/attendancetarcker.git'
             }
         }
 
@@ -48,7 +48,7 @@ pipeline {
                             exit /b 1
                         )
 
-                        timeout /T 2 >nul
+                        ping -n 3 127.0.0.1 >nul
                         goto loop
                     '''
                 }
@@ -58,7 +58,7 @@ pipeline {
         stage('Push to DockerHub') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: '1234', // Must match Jenkins credential ID
+                    credentialsId: '1234', // Set this ID in Jenkins > Credentials
                     usernameVariable: 'DOCKER_USERNAME',
                     passwordVariable: 'DOCKER_PASSWORD'
                 )]) {
